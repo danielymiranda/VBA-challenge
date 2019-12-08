@@ -1,0 +1,177 @@
+Sub Stock_Market()
+
+'Part I: Bring data together
+    Sheets.Add.Name = "Combined_Data"
+    
+    Set combined_sheet = Worksheets("Combined_Data")
+    
+    For Each ws In Worksheets
+
+        LastRow = combined_sheet.Cells(Rows.Count, "A").End(xlUp).Row + 1
+        lastRowState = ws.Cells(Rows.Count, "A").End(xlUp).Row - 1
+        combined_sheet.Range("A" & LastRow & ":G" & ((lastRowState - 1) + LastRow)).Value = ws.Range("A2:G" & (lastRowState + 1)).Value
+    Next ws
+        Sheets("A").Select
+        Range("A1:G1").Select
+        Selection.Copy
+        Sheets("Combined_Data").Select
+        Range("A1").Select
+        ActiveSheet.Paste
+        combined_sheet.Columns("A:N").AutoFit
+        'Range("J1").Value = "Ticker"
+        'Range("K1").Value = "Yearly Change"
+        'Range("L1").Value = "Percentage Change"
+        'Range("M1").Value = "Total Stock Volume"
+
+
+    Dim Ticker_Name As String
+
+        'Keep track of the location for each ticker in the summary table
+    Dim Summary As Integer
+    Summary = 2
+
+        'Set an initial variable for holding the total at opening per ticker
+    Dim Ticker_Total_Open As Double
+    Ticker_Total_Open = 0
+
+        'Set an initial variable for holding the total at closing per ticker
+    Dim Ticker_Total_Close As Double
+    Ticker_Total_Close = 0
+
+        'Set an initial variable for the yearly change per ticker
+    Dim Yearly_Change As Double
+    Yearly_Change = 0
+              
+        'Set an initial variable for the total stock volume
+    Dim Total_Stock_Volume As Double
+    Total_Stock_Volume = 0
+              
+              
+        'Add the word ticker to the First Column Header
+    Cells(1, 10).Value = "Ticker"
+              
+        'Add the word "yearly change" to the First Column Header
+    Cells(1, 11).Value = "Yearly Change"
+              
+        'Add the word "percent change" "to the First Column Header
+    Cells(1, 12).Value = "Percent Change"
+              
+        'Add the word "Total Stock Volume" "to the First Column Header
+    Cells(1, 13).Value = "Total Stock Volume"
+        
+    LastRow = Cells(Rows.Count, 1).End(xlUp).Row
+          
+    For i = 2 To LastRow
+        If Cells(i + 1, 1).Value <> Cells(i, 1).Value Then
+            Ticker = Cells(i, 1).Value
+            Range("J" & Summary).Value = Ticker 'AQUIIII
+            Summary = Summary + 1 'AQUIIII
+        
+            Ticker_Total_Open = Ticker_Total_Open + Cells(i, 3).Value
+
+                        'Add to the Ticker Total at closing
+            Ticker_Total_Close = Ticker_Total_Close + Cells(i, 6).Value
+
+                        'Add to the the total stock volume
+            Total_Stock_Volume = Total_Stock_Volume + Cells(i, 7).Value
+
+                        'Set an initial variable for the difference between close and opening
+            Dim Difference As Double
+            Difference = Ticker_Total_Close - Ticker_Total_Open
+
+                        'Print the ticker in the Summary Table
+            Range("J" & Summary).Value = Ticker_Name
+
+                        'Print the Yearly Change to the Summary Table
+            Range("K" & Summary).Value = Difference
+            
+                If Range("K" & Summary) <= 0 Then
+                    Range("K" & Summary).Interior.ColorIndex = 3
+                Else
+                    Range("K" & Summary).Interior.ColorIndex = 4
+                End If
+            Dim Percent_Change As Long
+
+                If Ticker_Total_Open = 0 Then
+                    Percent_Change = 0
+                Else
+                    Percent_Change = CLng(CLng(Difference) / CLng(Ticker_Total_Open))
+                End If
+                
+            Range("L" & Summary).Value = Percent_Change
+            Range("L" & Summary).NumberFormat = "0.00%"
+
+                        'Print the total stock volume in the Summary Table
+            Range("M" & Summary).Value = Total_Stock_Volume
+            Range("M" & Summary).NumberFormat = "0,00"
+                        'Add one to the summary table row aAQUIIII
+            'Summary = Summary + 1
+
+                        'Reset the Ticker Total at opening
+            Ticker_Total_Open = 0
+
+                        'Reset the Ticker total at closing
+            Ticker_Total_Close = 0
+
+                        'Reset the yearly change
+            Difference = 0
+
+                        'Reset the total stock volume
+            Total_Stock_Volume = 0
+        Else
+        
+            Ticker_Total_Open = Ticker_Total_Open + Cells(i, 3).Value
+
+                        'Add to the ticker total at closing
+            Ticker_Total_Close = Ticker_Total_Close + Cells(i, 6).Value
+
+                        'Add to the total stock volume
+            Total_Stock_Volume = Total_Stock_Volume + Cells(i, 7).Value
+        End If
+
+Next i
+
+    Range("K3:M3").Select
+    Range(Selection, Selection.End(xlDown)).Select
+    Selection.Cut
+    Selection.End(xlUp).Select
+    Range("K2").Select
+    ActiveSheet.Paste
+'Part 3
+
+    Cells(2, 16).Value = "Greatest Increase"
+    Cells(3, 16).Value = "Greatest Decrease"
+    Cells(4, 16).Value = "Greatest Total Volume"
+
+        'Add the word ticker to the Column_P Header
+    Cells(1, 17).Value = "Ticker"
+
+        'Add the word "value" to the Column_Q Header
+    Cells(1, 18).Value = "Value"
+
+    Dim rng As Range
+    Dim rng1 As Range
+    Dim Max As Double
+    Dim Min As Double
+    Dim MxV As Double
+    
+    Set rng = Worksheets("Combined_Data").Range("K:K")
+    Set rng1 = Worksheets("Combined_Data").Range("M:M")
+    
+    Max = Application.WorksheetFunction.Max(rng)
+    Min = Application.WorksheetFunction.Min(rng)
+    MxV = Application.WorksheetFunction.Max(rng1)
+    Cells(2, 18).Value = Max
+    Cells(3, 18).Value = Min
+    Cells(4, 18).Value = MxV
+
+    Range("R2").NumberFormat = "_(* #,##0.00_);_(* (#,##0.00);_(* """"-""""??_);_(@_)"
+    Range("R3").NumberFormat = "_(* #,##0.00_);_(* (#,##0.00);_(* """"-""""??_);_(@_)"
+    Range("R4").NumberFormat = "_(* #,##0.00_);_(* (#,##0.00);_(* """"-""""??_);_(@_)"
+    
+    Range("Q2") = "=index(J:J,match(R2,K:K,0))"
+    Range("Q3") = "=index(J:J,match(R3,K:K,0))"
+    Range("Q4") = "=index(J:J,match(R4,M:M,0))"
+    
+End Sub
+
